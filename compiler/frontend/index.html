@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Security Aware Compiler</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="wrap">
+
+    <!-- ── HEADER ── -->
+    <header>
+      <div class="logo">
+        <div class="logo-icon">&#9881;</div>
+        <div>
+          <div class="logo-text">SecurityCompiler</div>
+          <div class="logo-sub">Static Analysis Engine</div>
+        </div>
+      </div>
+      <div class="header-badges">
+        <span class="badge badge-blue">Python</span>
+        <span class="badge badge-blue">C Lang</span>
+        <span class="badge badge-green">API Live</span>
+      </div>
+    </header>
+
+    <!-- ── MAIN LAYOUT ── -->
+    <div class="main">
+
+      <!-- ── LEFT: CODE INPUT PANEL ── -->
+      <div class="left-panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="dot dot-red"></span>
+            <span class="dot dot-yellow"></span>
+            <span class="dot dot-green"></span>
+            <span class="panel-title-text">Source Code Editor</span>
+          </div>
+          <div class="lang-selector">
+            <select id="language" class="select">
+              <option value="auto">Auto Detect</option>
+              <option value="python">Python</option>
+              <option value="c">C Language</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="editor-wrap">
+          <div class="line-numbers" id="lineNumbers">1</div>
+          <textarea
+            id="codeInput"
+            class="editor"
+            spellcheck="false"
+            placeholder="Paste your Python or C code here..."
+          ></textarea>
+        </div>
+
+        <div class="left-footer">
+          <div class="editor-stats">
+            <span id="lineCount">0 lines</span>
+            <span id="charCount">0 chars</span>
+            <span id="detectedLang">No code</span>
+          </div>
+          <div class="btn-group">
+            <button class="btn btn-ghost" id="clearBtn">Clear</button>
+            <button class="btn btn-ghost" id="loadSampleBtn">Load Sample</button>
+            <button class="btn btn-primary" id="analyzeBtn">
+              <span id="btnText">Analyze Code</span>
+              <span id="btnSpinner" class="spinner hidden"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── RIGHT: RESULTS PANEL ── -->
+      <div class="right-panel" id="rightPanel">
+
+        <!-- IDLE STATE -->
+        <div class="idle-state" id="idleState">
+          <div class="idle-icon">&#128274;</div>
+          <div class="idle-title">Ready to Analyze</div>
+          <div class="idle-sub">Paste your code on the left and click Analyze Code</div>
+          <div class="idle-features">
+            <div class="feature-pill">&#10003; SQL Injection</div>
+            <div class="feature-pill">&#10003; Buffer Overflow</div>
+            <div class="feature-pill">&#10003; Hardcoded Secrets</div>
+            <div class="feature-pill">&#10003; Unsafe Input</div>
+            <div class="feature-pill">&#10003; Weak Crypto</div>
+            <div class="feature-pill">&#10003; Command Injection</div>
+          </div>
+        </div>
+
+        <!-- RESULTS STATE (hidden until analysis runs) -->
+        <div class="results-state hidden" id="resultsState">
+
+          <!-- STATUS BAR -->
+          <div class="status-bar" id="statusBar">
+            <div class="status-left">
+              <div class="status-dot" id="statusDot"></div>
+              <span id="statusText">Analyzing...</span>
+            </div>
+            <div class="status-right">
+              <span class="status-tag" id="langTag">—</span>
+              <span class="status-tag" id="tokenTag">0 tokens</span>
+            </div>
+          </div>
+
+          <!-- SUMMARY CARDS -->
+          <div class="summary-cards">
+            <div class="summary-card card-blue">
+              <div class="card-num" id="cardTokens">0</div>
+              <div class="card-label">Tokens</div>
+            </div>
+            <div class="summary-card card-green">
+              <div class="card-num" id="cardSymbols">0</div>
+              <div class="card-label">Symbols</div>
+            </div>
+            <div class="summary-card card-orange">
+              <div class="card-num" id="cardWarnings">0</div>
+              <div class="card-label">Warnings</div>
+            </div>
+            <div class="summary-card card-red">
+              <div class="card-num" id="cardErrors">0</div>
+              <div class="card-label">Errors</div>
+            </div>
+          </div>
+
+          <!-- TABS -->
+          <div class="tabs">
+            <button class="tab active" data-tab="security">Security</button>
+            <button class="tab" data-tab="symbols">Symbols</button>
+            <button class="tab" data-tab="tokens">Tokens</button>
+            <button class="tab" data-tab="errors">Errors</button>
+            <button class="tab" data-tab="ast">AST Info</button>
+          </div>
+
+          <!-- TAB CONTENTS -->
+          <div class="tab-content" id="tabContent">
+
+            <!-- SECURITY TAB -->
+            <div class="tab-pane active" id="tab-security">
+              <div id="securityList"></div>
+            </div>
+
+            <!-- SYMBOLS TAB -->
+            <div class="tab-pane hidden" id="tab-symbols">
+              <table class="data-table" id="symbolTable">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Kind</th>
+                    <th>Type</th>
+                    <th>Line</th>
+                    <th>Source</th>
+                  </tr>
+                </thead>
+                <tbody id="symbolBody"></tbody>
+              </table>
+            </div>
+
+            <!-- TOKENS TAB -->
+            <div class="tab-pane hidden" id="tab-tokens">
+              <table class="data-table" id="tokenTable">
+                <thead>
+                  <tr>
+                    <th>Line</th>
+                    <th>Col</th>
+                    <th>Type</th>
+                    <th>Value</th>
+                  </tr>
+                </thead>
+                <tbody id="tokenBody"></tbody>
+              </table>
+            </div>
+
+            <!-- ERRORS TAB -->
+            <div class="tab-pane hidden" id="tab-errors">
+              <div id="errorsList"></div>
+            </div>
+
+            <!-- AST TAB -->
+            <div class="tab-pane hidden" id="tab-ast">
+              <pre class="ast-view" id="astView"></pre>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
